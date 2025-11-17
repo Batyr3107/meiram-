@@ -1,28 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/auth_interceptor.dart';
 import 'package:shop_app/core/network/dio_client.dart';
-import 'package:shop_app/services/auth_service.dart';
 
 /// Address API client
 ///
 /// Handles address management with automatic authentication.
 class AddressApi {
   AddressApi() : _client = DioClient() {
-    _client.dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
-          final String? token = await AuthService.getAccessToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          final String? userId = await AuthService.getUserId();
-          if (userId != null) {
-            options.headers['X-User-Id'] = userId;
-          }
-          handler.next(options);
-        },
-      ),
-    );
+    // Add auth interceptor
+    _client.dio.interceptors.add(AuthInterceptor());
   }
 
   final DioClient _client;
@@ -56,6 +43,10 @@ class AddressApi {
         data: body,
       );
 
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
       AppLogger.info('Address created successfully');
       return AddressResponse.fromJson(response.data!);
     } catch (e, stack) {
@@ -77,6 +68,10 @@ class AddressApi {
         '/api/v1/addresses',
         data: body,
       );
+
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
 
       AppLogger.info('Address updated successfully');
       return AddressResponse.fromJson(response.data!);
@@ -113,6 +108,11 @@ class AddressResponse {
   });
 
   factory AddressResponse.fromJson(Map<String, dynamic> json) {
+    // Validate required field
+    if (json['id'] == null) {
+      throw FormatException('Missing required field: id');
+    }
+
     return AddressResponse(
       id: json['id'].toString(),
       address: json['address']?.toString() ?? '',

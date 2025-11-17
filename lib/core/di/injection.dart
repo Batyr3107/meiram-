@@ -18,6 +18,10 @@ import 'package:shop_app/domain/repositories/cart_repository.dart';
 import 'package:shop_app/domain/repositories/order_repository.dart';
 import 'package:shop_app/domain/repositories/product_repository.dart';
 import 'package:shop_app/domain/repositories/seller_repository.dart';
+import 'package:shop_app/domain/usecases/get_products_usecase.dart';
+import 'package:shop_app/domain/usecases/login_usecase.dart';
+import 'package:shop_app/domain/usecases/register_buyer_usecase.dart';
+import 'package:shop_app/domain/usecases/submit_order_usecase.dart';
 
 final getIt = GetIt.instance;
 
@@ -52,6 +56,20 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<IAddressRepository>(
     () => AddressRepositoryImpl(getIt<AddressApi>()),
+  );
+
+  // Register Use Cases
+  getIt.registerFactory<LoginUseCase>(
+    () => LoginUseCase(getIt<IAuthRepository>()),
+  );
+  getIt.registerFactory<RegisterBuyerUseCase>(
+    () => RegisterBuyerUseCase(getIt<IAuthRepository>()),
+  );
+  getIt.registerFactory<GetProductsUseCase>(
+    () => GetProductsUseCase(getIt<IProductRepository>()),
+  );
+  getIt.registerFactory<SubmitOrderUseCase>(
+    () => SubmitOrderUseCase(getIt<IOrderRepository>()),
   );
 }
 

@@ -1,25 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/auth_interceptor.dart';
 import 'package:shop_app/core/network/dio_client.dart';
-import 'package:shop_app/services/auth_service.dart';
 
 /// Seller API client
 ///
 /// Handles seller-related API calls with automatic authentication.
 class SellerApi {
   SellerApi() : _client = DioClient() {
-    // Add auth token interceptor
-    _client.dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
-          final String? token = await AuthService.getAccessToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          handler.next(options);
-        },
-      ),
-    );
+    // Add auth interceptor (without User-Id header)
+    _client.dio.interceptors.add(SimpleAuthInterceptor());
   }
 
   final DioClient _client;

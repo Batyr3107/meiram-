@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shop_app/api/order_api.dart';
+import 'package:shop_app/core/constants/app_constants.dart';
 import 'package:shop_app/core/di/injection.dart';
 import 'package:shop_app/domain/repositories/order_repository.dart';
 import 'package:shop_app/domain/usecases/submit_order_usecase.dart';
@@ -18,7 +19,10 @@ final submitOrderUseCaseProvider = Provider<SubmitOrderUseCase>((ref) {
 /// Orders List Provider
 final ordersProvider = FutureProvider.autoDispose<List<BuyerOrderResponse>>((ref) async {
   final repository = ref.watch(orderRepositoryProvider);
-  final ordersPage = await repository.getBuyerOrders(page: 0, size: 50);
+  final ordersPage = await repository.getBuyerOrders(
+    page: 0,
+    size: AppConstants.largePageSize,
+  );
   return ordersPage.content;
 });
 

@@ -1,37 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/auth_interceptor.dart';
 import 'package:shop_app/core/network/dio_client.dart';
-import 'package:shop_app/services/auth_service.dart';
 
 /// Cart API client
 ///
 /// Handles shopping cart operations with automatic authentication.
 class CartApi {
   CartApi() : _client = DioClient() {
-    // Add auth headers interceptor
-    _client.dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
-          await AuthService.ensureLoaded();
-
-          final String? token = AuthService.accessToken;
-          final String? userId = AuthService.userId;
-
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-
-          if (userId != null && userId.isNotEmpty) {
-            options.headers['X-User-Id'] = userId;
-            AppLogger.debug('X-User-Id header set: $userId');
-          } else {
-            AppLogger.warning('X-User-Id is missing or empty');
-          }
-
-          handler.next(options);
-        },
-      ),
-    );
+    // Add auth interceptor
+    _client.dio.interceptors.add(AuthInterceptor());
   }
 
   final DioClient _client;
@@ -44,6 +22,11 @@ class CartApi {
       final response = await _client.get<Map<String, dynamic>>(
         '/orders/cart/seller/$sellerId',
       );
+
+      if (response.data == null) {
+        AppLogger.debug('Cart not found, returning empty cart');
+        return CartResponse.empty(sellerId: sellerId);
+      }
 
       AppLogger.debug('Cart retrieved for seller: $sellerId');
       return CartResponse.fromJson(response.data!);
@@ -77,6 +60,10 @@ class CartApi {
         '/orders/cart/items',
         data: body,
       );
+
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
 
       AppLogger.info('Item added to cart successfully');
       return CartResponse.fromJson(response.data!);
@@ -113,6 +100,10 @@ class CartApi {
         '/orders/cart/items/$itemId',
         data: body,
       );
+
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
 
       AppLogger.info('Item quantity updated successfully');
       return CartResponse.fromJson(response.data!);

@@ -1,30 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/auth_interceptor.dart';
 import 'package:shop_app/core/network/dio_client.dart';
-import 'package:shop_app/services/auth_service.dart';
 
 /// User API client
 ///
 /// Handles user profile operations with automatic authentication.
 class UserApi {
   UserApi() : _client = DioClient() {
-    _client.dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
-          await AuthService.ensureLoaded();
-          final String? token = AuthService.accessToken;
-          final String? userId = AuthService.userId;
-
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          if (userId != null) {
-            options.headers['X-User-Id'] = userId;
-          }
-          handler.next(options);
-        },
-      ),
-    );
+    // Add auth interceptor
+    _client.dio.interceptors.add(AuthInterceptor());
   }
 
   final DioClient _client;

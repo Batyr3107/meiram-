@@ -1,5 +1,9 @@
 // lib/screens/sellers_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shop_app/core/constants/app_constants.dart';
+import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/domain/repositories/seller_repository.dart';
 import '../api/seller_api.dart';
 import 'seller_products_screen.dart';
 
@@ -16,28 +20,39 @@ class _SellersScreenState extends State<SellersScreen> {
   bool _loading = true;
   String _error = '';
   final _searchCtrl = TextEditingController();
+  Timer? _debounce;
+  late final ISellerRepository _sellerRepository;
 
   @override
   void initState() {
     super.initState();
+    // Получаем ISellerRepository через DI
+    _sellerRepository = getIt<ISellerRepository>();
     _loadSellers();
     _searchCtrl.addListener(_onSearchChanged);
   }
 
   void _onSearchChanged() {
-    final query = _searchCtrl.text.toLowerCase();
-    setState(() {
-      _filteredSellers = _allSellers
-          .where((s) => s.organizationName.toLowerCase().contains(query))
-          .toList();
+    // Cancel previous timer
+    _debounce?.cancel();
+    // Start new timer with 250ms debounce
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      final query = _searchCtrl.text.toLowerCase();
+      setState(() {
+        _filteredSellers = _allSellers
+            .where((s) => s.organizationName.toLowerCase().contains(query))
+            .toList();
+      });
     });
   }
 
   Future<void> _loadSellers() async {
     try {
-      const baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-      final sellerApi = SellerApi(baseUrl);
-      final response = await sellerApi.getActiveSellers(page: 0, size: 100);
+      // Используем ISellerRepository через DI вместо прямого API вызова
+      final response = await _sellerRepository.getActiveSellers(
+        page: 0,
+        size: AppConstants.maxPageSize,
+      );
       setState(() {
         _allSellers.addAll(response.content);
         _filteredSellers = List.from(_allSellers);
@@ -145,6 +160,7 @@ class _SellersScreenState extends State<SellersScreen> {
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 }

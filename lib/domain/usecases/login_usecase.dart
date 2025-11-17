@@ -2,7 +2,7 @@ import 'package:shop_app/core/error/app_error.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
 import 'package:shop_app/core/performance/performance_monitor.dart';
 import 'package:shop_app/core/security/input_sanitizer.dart';
-import 'package:shop_app/core/validators/validators.dart';
+import 'package:shop_app/core/validation/validation_helper.dart';
 import 'package:shop_app/domain/repositories/auth_repository.dart';
 import 'package:shop_app/dto/auth_response.dart';
 
@@ -35,16 +35,9 @@ class LoginUseCase {
 
   Future<AuthResponse> execute(String email, String password) async {
     return PerformanceMonitor.measure('login_usecase', () async {
-      // Validate input
-      final String? emailError = Validators.email(email);
-      if (emailError != null) {
-        throw ValidationError.invalidEmail();
-      }
-
-      final String? passwordError = Validators.password(password);
-      if (passwordError != null) {
-        throw ValidationError.passwordTooShort();
-      }
+      // Validate input using ValidationHelper
+      ValidationHelper.requireValidEmail(email);
+      ValidationHelper.requireValidPassword(password);
 
       // Sanitize input
       final String sanitizedEmail = InputSanitizer.sanitizeEmail(email);

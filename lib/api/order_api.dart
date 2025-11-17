@@ -1,28 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/auth_interceptor.dart';
 import 'package:shop_app/core/network/dio_client.dart';
-import 'package:shop_app/services/auth_service.dart';
+import 'package:shop_app/core/utils/json_parser.dart';
 
 /// Order API client
 ///
 /// Handles order management with automatic authentication.
 class OrderApi {
   OrderApi() : _client = DioClient() {
-    _client.dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
-          final String? token = await AuthService.getAccessToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          final String? userId = await AuthService.getUserId();
-          if (userId != null) {
-            options.headers['X-User-Id'] = userId;
-          }
-          handler.next(options);
-        },
-      ),
-    );
+    // Add auth interceptor
+    _client.dio.interceptors.add(AuthInterceptor());
   }
 
   final DioClient _client;
@@ -48,6 +36,10 @@ class OrderApi {
         data: body,
       );
 
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
       AppLogger.info('Order submitted successfully');
       return CreateOrderResponse.fromJson(response.data!);
     } catch (e, stack) {
@@ -72,7 +64,12 @@ class OrderApi {
         },
       );
 
-      AppLogger.debug('Fetched ${response.data!['content'].length} orders');
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
+      final contentLength = (response.data!['content'] as List?)?.length ?? 0;
+      AppLogger.debug('Fetched $contentLength orders');
       return OrdersPageResponse.fromJson(response.data!);
     } catch (e, stack) {
       AppLogger.error('Failed to fetch buyer orders', e, stack);
@@ -88,6 +85,10 @@ class OrderApi {
       final response = await _client.get<Map<String, dynamic>>(
         '/orders/$orderId',
       );
+
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
 
       AppLogger.debug('Order details retrieved');
       return BuyerOrderDetailResponse.fromJson(response.data!);
@@ -119,18 +120,8 @@ class CreateOrderResponse {
       orderId: json['orderId']?.toString() ?? '',
       status: json['status']?.toString() ?? 'PENDING',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: JsonParser.parseDateTime(json['createdAt']),
     );
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (e) {
-      AppLogger.warning('Invalid date format: $value');
-      return DateTime.now();
-    }
   }
 }
 
@@ -185,19 +176,9 @@ class BuyerOrderResponse {
       sellerName: json['sellerName']?.toString() ?? 'Продавец',
       totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'PENDING',
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: JsonParser.parseDateTime(json['createdAt']),
       itemsCount: (json['itemsCount'] as int?) ?? 0,
     );
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (e) {
-      AppLogger.warning('Invalid date format: $value');
-      return DateTime.now();
-    }
   }
 }
 
@@ -236,18 +217,8 @@ class BuyerOrderDetailResponse {
       items: (json['items'] as List?)
           ?.map((e) => OrderItemDetail.fromJson(e))
           .toList() ?? [],
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: JsonParser.parseDateTime(json['createdAt']),
     );
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (e) {
-      AppLogger.warning('Invalid date format: $value');
-      return DateTime.now();
-    }
   }
 
   // Геттеры для совместимости с orders_screen.dart
@@ -279,7 +250,7 @@ class OrderItemDetail {
 
   factory OrderItemDetail.fromJson(Map<String, dynamic> json) {
     return OrderItemDetail(
-      productId: json['productId'].toString(),
+      productId: json['productId']?.toString() ?? '',
       productName: json['productName']?.toString() ?? 'Товар',
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
       unit: json['unit']?.toString() ?? 'шт',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/domain/usecases/get_products_usecase.dart';
 import '../api/seller_api.dart';
 import '../api/product_api.dart';
 import '../services/cart_service.dart';
@@ -24,16 +26,16 @@ class _SellerProductsScreenState extends State<SellerProductsScreen> {
   List<ProductResponse> _filtered = [];
   final _searchCtrl = TextEditingController();
   Timer? _debounce;
-  late final ProductApi _productApi;
+  late final GetProductsUseCase _getProductsUseCase;
   late CartResponse _currentCart;
   final Map<String, bool> _loadingProducts = {};
   late StreamSubscription<CartResponse> _cartSubscription;
-  static const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   @override
   void initState() {
     super.initState();
-    _productApi = ProductApi(_baseUrl);
+    // Получаем GetProductsUseCase через DI
+    _getProductsUseCase = getIt<GetProductsUseCase>();
     _currentCart = CartResponse.empty(sellerId: widget.seller.id);
     _loadData();
     _setupCartSubscription();
@@ -89,7 +91,8 @@ class _SellerProductsScreenState extends State<SellerProductsScreen> {
   // === ФОНОВАЯ ЗАГРУЗКА ТОВАРОВ ===
   Future<void> _refreshProductsInBackground(String userId) async {
     try {
-      final data = await _productApi.getBySeller(widget.seller.id);
+      // Используем GetProductsUseCase вместо прямого API вызова
+      final data = await _getProductsUseCase.execute(widget.seller.id);
       ProductCache.set(userId, widget.seller.id, data);
 
       if (mounted) {
