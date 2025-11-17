@@ -1,29 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/auth_interceptor.dart';
 import 'package:shop_app/core/network/dio_client.dart';
 import 'package:shop_app/core/utils/json_parser.dart';
-import 'package:shop_app/services/auth_service.dart';
 
 /// Order API client
 ///
 /// Handles order management with automatic authentication.
 class OrderApi {
   OrderApi() : _client = DioClient() {
-    _client.dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
-          final String? token = await AuthService.getAccessToken();
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          final String? userId = await AuthService.getUserId();
-          if (userId != null) {
-            options.headers['X-User-Id'] = userId;
-          }
-          handler.next(options);
-        },
-      ),
-    );
+    // Add auth interceptor
+    _client.dio.interceptors.add(AuthInterceptor());
   }
 
   final DioClient _client;
@@ -49,6 +36,10 @@ class OrderApi {
         data: body,
       );
 
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
       AppLogger.info('Order submitted successfully');
       return CreateOrderResponse.fromJson(response.data!);
     } catch (e, stack) {
@@ -73,7 +64,12 @@ class OrderApi {
         },
       );
 
-      AppLogger.debug('Fetched ${response.data!['content'].length} orders');
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
+      final contentLength = (response.data!['content'] as List?)?.length ?? 0;
+      AppLogger.debug('Fetched $contentLength orders');
       return OrdersPageResponse.fromJson(response.data!);
     } catch (e, stack) {
       AppLogger.error('Failed to fetch buyer orders', e, stack);
@@ -89,6 +85,10 @@ class OrderApi {
       final response = await _client.get<Map<String, dynamic>>(
         '/orders/$orderId',
       );
+
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
 
       AppLogger.debug('Order details retrieved');
       return BuyerOrderDetailResponse.fromJson(response.data!);
@@ -250,7 +250,7 @@ class OrderItemDetail {
 
   factory OrderItemDetail.fromJson(Map<String, dynamic> json) {
     return OrderItemDetail(
-      productId: json['productId'].toString(),
+      productId: json['productId']?.toString() ?? '',
       productName: json['productName']?.toString() ?? 'Товар',
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
       unit: json['unit']?.toString() ?? 'шт',

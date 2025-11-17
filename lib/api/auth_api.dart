@@ -49,6 +49,10 @@ class AuthApi {
         data: body,
       );
 
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
       AppLogger.info('Registration successful for: $email');
       return RegistrationResponse.fromJson(response.data!);
     } catch (e, stack) {
@@ -86,6 +90,10 @@ class AuthApi {
         data: body,
       );
 
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
       AppLogger.info('Login successful for: $email');
       return AuthResponse.fromJson(response.data!);
     } catch (e, stack) {
@@ -113,6 +121,10 @@ class AuthApi {
         '/auth/refresh',
         data: body,
       );
+
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
 
       AppLogger.debug('Token refresh successful');
       return AuthResponse.fromJson(response.data!);
