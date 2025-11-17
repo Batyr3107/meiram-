@@ -30,7 +30,7 @@ abstract class IAuthRepository {
   Future<AuthResponse> refreshToken(String refreshToken);
 
   /// Logout and clear tokens
-  Future<void> logout();
+  Future<void> logout(String refreshToken);
 
   /// Check if user is authenticated
   bool isAuthenticated();
