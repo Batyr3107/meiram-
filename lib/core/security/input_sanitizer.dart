@@ -71,19 +71,41 @@ class InputSanitizer {
   }
 
   /// Validate and sanitize URL
+  ///
+  /// Only allows http and https protocols and blocks dangerous patterns
   static String? sanitizeUrl(String url) {
     try {
       final Uri uri = Uri.parse(url);
-      
+
       // Only allow http and https
       if (uri.scheme != 'http' && uri.scheme != 'https') {
         return null;
       }
-      
+
+      // Check for suspicious patterns
+      final urlString = uri.toString();
+      if (urlString.contains('javascript:') ||
+          urlString.contains('data:') ||
+          urlString.contains('vbscript:') ||
+          urlString.contains('file:')) {
+        return null;
+      }
+
       return uri.toString();
     } catch (e) {
+      // Invalid URL format
       return null;
     }
+  }
+
+  /// Sanitize filename to prevent path traversal
+  static String sanitizeFilename(String filename) {
+    // Remove path separators and dangerous characters
+    return filename
+        .replaceAll(RegExp(r'[/\\]'), '')
+        .replaceAll('..', '')
+        .replaceAll(RegExp(r'[<>:"|?*]'), '_')
+        .trim();
   }
 
   /// Remove SQL injection patterns

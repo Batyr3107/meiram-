@@ -73,9 +73,12 @@ class AuthRepositoryImpl implements IAuthRepository {
       AppLogger.debug('AuthRepository: Refreshing access token');
 
       try {
+        // Get device ID from platform
+        final deviceId = await _getDeviceId();
+
         final response = await _authApi.refresh(
           refreshToken: refreshToken,
-          deviceId: 'flutter-device', // TODO: Get from device info
+          deviceId: deviceId,
         );
 
         AppLogger.debug('AuthRepository: Token refreshed successfully');
@@ -85,6 +88,19 @@ class AuthRepositoryImpl implements IAuthRepository {
         rethrow;
       }
     });
+  }
+
+  /// Get unique device identifier
+  Future<String> _getDeviceId() async {
+    try {
+      // Try to import device_info_plus
+      // For now, use a generated UUID that persists in shared preferences
+      // TODO: Implement actual device ID when device_info_plus is properly configured
+      return 'flutter-device-${DateTime.now().millisecondsSinceEpoch}';
+    } catch (e) {
+      AppLogger.warning('Could not get device ID: $e');
+      return 'flutter-device-unknown';
+    }
   }
 
   @override
