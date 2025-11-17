@@ -19,10 +19,7 @@ class ErrorHandler {
       return NetworkError.fromDioException(error);
     }
 
-    return AppError(
-      'Неизвестная ошибка: ${error.toString()}',
-      'UNKNOWN',
-    ) as AppError;
+    return UnknownError.fromException(error);
   }
 
   /// Check if error is recoverable (can be retried)

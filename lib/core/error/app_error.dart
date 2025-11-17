@@ -15,6 +15,30 @@ abstract class AppError implements Exception {
 class NetworkError extends AppError {
   const NetworkError(super.message, {super.code});
 
+  /// Check if this error can be retried
+  bool get isRetryable {
+    // Timeout errors and connection errors are retryable
+    if (code == 'CONNECTION_TIMEOUT' ||
+        code == 'SEND_TIMEOUT' ||
+        code == 'RECEIVE_TIMEOUT' ||
+        code == 'CONNECTION_ERROR') {
+      return true;
+    }
+
+    // Server errors (500+) are retryable
+    if (code != null && code!.startsWith('HTTP_5')) {
+      return true;
+    }
+
+    // 429 (Too Many Requests) is retryable after delay
+    if (code == 'HTTP_429') {
+      return true;
+    }
+
+    // Client errors (400-499) are generally not retryable
+    return false;
+  }
+
   factory NetworkError.fromDioException(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -173,5 +197,15 @@ class CacheError extends AppError {
   factory CacheError.writeFailed() => const CacheError(
         'Не удалось записать данные в кэш',
         code: 'WRITE_FAILED',
+      );
+}
+
+/// Unknown/Unhandled errors
+class UnknownError extends AppError {
+  const UnknownError(super.message, {super.code});
+
+  factory UnknownError.fromException(Object error) => UnknownError(
+        'Неизвестная ошибка: ${error.toString()}',
+        code: 'UNKNOWN',
       );
 }
