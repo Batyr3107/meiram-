@@ -84,8 +84,8 @@ class ErrorHandler {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (BuildContext context) => PopScope(
+        canPop: false,
         child: Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
