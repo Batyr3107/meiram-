@@ -1,15 +1,10 @@
 import 'package:dio/dio.dart';
-import '../services/auth_service.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/services/auth_service.dart';
 
+/// Product data model
 class ProductResponse {
-  final String id;
-  final String name;
-  final String description;
-  final String unit;
-  final double price;
-  final double minOrderQty;
-  final bool active;
-
   ProductResponse({
     required this.id,
     required this.name,
@@ -31,31 +26,60 @@ class ProductResponse {
       active: j['active'] as bool? ?? true,
     );
   }
+
+  final String id;
+  final String name;
+  final String description;
+  final String unit;
+  final double price;
+  final double minOrderQty;
+  final bool active;
 }
 
+/// Product API client
+///
+/// Handles product-related API calls with automatic authentication.
 class ProductApi {
-  final Dio dio;
-
-  ProductApi(String baseUrl)
-      : dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    // тот же интерсептор, что и в SellerApi
-    dio.interceptors.add(
+  ProductApi() : _client = DioClient() {
+    // Add auth token interceptor
+    _client.dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await AuthService.getAccessToken();
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
+          final String? token = await AuthService.getAccessToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
-          return handler.next(options);
+          handler.next(options);
         },
       ),
     );
   }
 
+  final DioClient _client;
+
+  /// Get products by seller ID
+  ///
+  /// Example:
+  /// ```dart
+  /// final products = await productApi.getBySeller('seller_123');
+  /// ```
   Future<List<ProductResponse>> getBySeller(String sellerId) async {
-    final res = await dio.get('/products/by-seller/$sellerId');
-    return (res.data as List)
-        .map((e) => ProductResponse.fromJson(e))
-        .toList();
+    AppLogger.debug('Fetching products for seller: $sellerId');
+
+    try {
+      final response = await _client.get<List<dynamic>>(
+        '/products/by-seller/$sellerId',
+      );
+
+      final List<ProductResponse> products = (response.data as List<dynamic>)
+          .map((dynamic e) => ProductResponse.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      AppLogger.debug('Fetched ${products.length} products for seller $sellerId');
+      return products;
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch products for seller $sellerId', e, stack);
+      rethrow;
+    }
   }
 }

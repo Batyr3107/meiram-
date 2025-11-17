@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
 import '../services/cart_service.dart';
 import '../api/order_api.dart';
 import '../api/address_api.dart';
@@ -52,7 +53,7 @@ class _CartScreenState extends State<CartScreen> {
         });
       }
     } catch (e) {
-      print('Error loading addresses: $e');
+      AppLogger.error('Failed to load addresses', e);
       // При ошибке показываем ручной ввод
       setState(() => _showManualInput = true);
     }
@@ -178,12 +179,7 @@ class _CartScreenState extends State<CartScreen> {
       return;
     }
 
-    print('🛒 === SUBMIT ORDER DEBUG ===');
-    print('🛒 Cart ID: "${_cart.cartId}"');
-    print('🛒 Seller ID: "${_cart.sellerId}"');
-    print('🛒 Items count: ${_cart.items.length}');
-    print('🛒 Total amount: ${_cart.totalAmount}');
-    print('🛒 === END DEBUG ===');
+    AppLogger.debug('Submitting order - Cart ID: ${_cart.cartId}, Seller: ${_cart.sellerId}, Items: ${_cart.items.length}, Amount: ${_cart.totalAmount}');
 
     setState(() => _loading = true);
 
@@ -204,7 +200,7 @@ class _CartScreenState extends State<CartScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      print('❌ Order submission error: $e');
+      AppLogger.error('Order submission failed', e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка оформления: $e')),
       );

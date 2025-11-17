@@ -1,85 +1,141 @@
-import 'package:dio/dio.dart';
-import '../dto/auth_response.dart';
-import '../dto/registration_response.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/dto/auth_response.dart';
+import 'package:shop_app/dto/registration_response.dart';
 
+/// Authentication API client
+///
+/// Handles all authentication-related API calls:
+/// - User registration
+/// - Login
+/// - Token refresh
+/// - Logout
+///
+/// Uses [DioClient] for network requests with automatic retry logic.
 class AuthApi {
-  final Dio dio;
+  AuthApi() : _client = DioClient();
 
-  AuthApi(String baseUrl)
-      : dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: true,
-        responseBody: true,
-        error: true,
-      ),
-    );
-  }
+  final DioClient _client;
 
-  // Регистрация покупателя
+  /// Register new buyer
+  ///
+  /// Returns [RegistrationResponse] with userId and role.
+  ///
+  /// Example:
+  /// ```dart
+  /// final response = await authApi.registerBuyer(
+  ///   email: 'user@example.com',
+  ///   phone: '+77001234567',
+  ///   password: 'securePassword123',
+  /// );
+  /// ```
   Future<RegistrationResponse> registerBuyer({
     required String email,
     required String phone,
     required String password,
   }) async {
-    final body = {
+    final Map<String, dynamic> body = <String, dynamic>{
       'role': 'BUYER',
       'email': email,
       'phone': phone,
       'password': password,
     };
-    print('Register request: $body');
-    final res = await dio.post('/auth/register', data: body);
-    return RegistrationResponse.fromJson(res.data);
-  }
 
-  // Вход в аккаунт
-  Future<AuthResponse> login({
-    required String email,
-    required String password,
-  }) async {
+    AppLogger.info('Registering new buyer: $email');
+
     try {
-      final body = {
-        'username': email,
-        'password': password,
-        'deviceId': 'flutter-web-${DateTime.now().millisecondsSinceEpoch}',
-      };
+      final response = await _client.post<Map<String, dynamic>>(
+        '/auth/register',
+        data: body,
+      );
 
-      print('Login request body: $body');
-
-      final res = await dio.post('/auth/login', data: body);
-
-      print('Login response status: ${res.statusCode}');
-      print('Login response data: ${res.data}');
-
-      return AuthResponse.fromJson(res.data); // ← ИСПОЛЬЗУЕТСЯ ИЗ DTO!
-    } catch (e) {
-      print('Login error: $e');
+      AppLogger.info('Registration successful for: $email');
+      return RegistrationResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Registration failed for: $email', e, stack);
       rethrow;
     }
   }
 
-  // Обновление токена
+  /// Login with email and password
+  ///
+  /// Returns [AuthResponse] with access and refresh tokens.
+  ///
+  /// Example:
+  /// ```dart
+  /// final response = await authApi.login(
+  ///   email: 'user@example.com',
+  ///   password: 'password123',
+  /// );
+  /// ```
+  Future<AuthResponse> login({
+    required String email,
+    required String password,
+  }) async {
+    final Map<String, dynamic> body = <String, dynamic>{
+      'username': email,
+      'password': password,
+      'deviceId': 'flutter-${DateTime.now().millisecondsSinceEpoch}',
+    };
+
+    AppLogger.info('Login attempt for: $email');
+
+    try {
+      final response = await _client.post<Map<String, dynamic>>(
+        '/auth/login',
+        data: body,
+      );
+
+      AppLogger.info('Login successful for: $email');
+      return AuthResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Login failed for: $email', e, stack);
+      rethrow;
+    }
+  }
+
+  /// Refresh access token using refresh token
+  ///
+  /// Returns new [AuthResponse] with fresh tokens.
   Future<AuthResponse> refresh({
     required String refreshToken,
     required String deviceId,
   }) async {
-    final body = {
+    final Map<String, dynamic> body = <String, dynamic>{
       'refreshToken': refreshToken,
       'deviceId': deviceId,
     };
-    print('Refresh request body: $body');
-    final res = await dio.post('/auth/refresh', data: body);
-    print('Refresh response: ${res.data}');
-    return AuthResponse.fromJson(res.data);
+
+    AppLogger.debug('Refreshing access token');
+
+    try {
+      final response = await _client.post<Map<String, dynamic>>(
+        '/auth/refresh',
+        data: body,
+      );
+
+      AppLogger.debug('Token refresh successful');
+      return AuthResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Token refresh failed', e, stack);
+      rethrow;
+    }
   }
 
-  // Выход
+  /// Logout and invalidate refresh token
   Future<void> logout({required String refreshToken}) async {
-    final body = {'refreshToken': refreshToken};
-    await dio.post('/auth/logout', data: body);
+    final Map<String, dynamic> body = <String, dynamic>{
+      'refreshToken': refreshToken,
+    };
+
+    AppLogger.info('Logging out user');
+
+    try {
+      await _client.post<void>('/auth/logout', data: body);
+      AppLogger.info('Logout successful');
+    } catch (e, stack) {
+      AppLogger.error('Logout failed', e, stack);
+      rethrow;
+    }
   }
 }

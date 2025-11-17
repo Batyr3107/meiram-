@@ -1,33 +1,73 @@
 import 'package:dio/dio.dart';
-import '../services/auth_service.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/services/auth_service.dart';
 
+/// Seller API client
+///
+/// Handles seller-related API calls with automatic authentication.
 class SellerApi {
-  final Dio dio;
-
-  SellerApi(String baseUrl) : dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    // Добавляем интерцептор для автоматической подстановки токена
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await AuthService.getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        return handler.next(options);
-      },
-    ));
+  SellerApi() : _client = DioClient() {
+    // Add auth token interceptor
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
+          final String? token = await AuthService.getAccessToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
-  Future<SellerListResponse> getActiveSellers({int page = 0, int size = 20}) async {
-    final res = await dio.get('/clients/sellers', queryParameters: {
-      'page': page,
-      'size': size,
-    });
-    return SellerListResponse.fromJson(res.data);
+  final DioClient _client;
+
+  /// Get list of active sellers with pagination
+  ///
+  /// Example:
+  /// ```dart
+  /// final response = await sellerApi.getActiveSellers(page: 0, size: 20);
+  /// ```
+  Future<SellerListResponse> getActiveSellers({
+    int page = 0,
+    int size = 20,
+  }) async {
+    AppLogger.debug('Fetching sellers: page=$page, size=$size');
+
+    try {
+      final response = await _client.get<Map<String, dynamic>>(
+        '/clients/sellers',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'size': size,
+        },
+      );
+
+      AppLogger.debug('Fetched ${response.data!['content'].length} sellers');
+      return SellerListResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch sellers', e, stack);
+      rethrow;
+    }
   }
 
+  /// Get seller details by ID
   Future<SellerResponse> getSellerById(String sellerId) async {
-    final res = await dio.get('/clients/sellers/$sellerId');
-    return SellerResponse.fromJson(res.data);
+    AppLogger.debug('Fetching seller: $sellerId');
+
+    try {
+      final response = await _client.get<Map<String, dynamic>>(
+        '/clients/sellers/$sellerId',
+      );
+
+      AppLogger.debug('Fetched seller: ${response.data!['organizationName']}');
+      return SellerResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch seller $sellerId', e, stack);
+      rethrow;
+    }
   }
 }
 

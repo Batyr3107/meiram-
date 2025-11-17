@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:shop_app/core/logger/app_logger.dart';
 import '../api/cart_api.dart';
 
 class CartService {
@@ -22,7 +23,7 @@ class CartService {
       _notifyCartUpdate(sellerId, cart);
       return cart;
     } catch (e) {
-      print('❌ Error loading cart for seller $sellerId: $e');
+      AppLogger.error('Failed to load cart for seller $sellerId', e);
       final emptyCart = CartResponse.empty(sellerId: sellerId);
       _sellerCarts[sellerId] = emptyCart;
       return emptyCart;
@@ -48,7 +49,7 @@ class CartService {
       _notifyCartUpdate(sellerId, updatedCart);
       return updatedCart;
     } catch (e) {
-      print('❌ Error adding to cart: $e');
+      AppLogger.error('Failed to add item to cart', e);
       rethrow;
     }
   }
@@ -65,7 +66,7 @@ class CartService {
       _sellerCarts[sellerId] = updatedCart;
       _notifyCartUpdate(sellerId, updatedCart);
     } catch (e) {
-      print('❌ Error removing item from cart: $e');
+      AppLogger.error('Failed to remove item from cart', e);
       rethrow;
     }
   }
@@ -88,7 +89,7 @@ class CartService {
       _notifyCartUpdate(sellerId, updatedCart);
       return updatedCart;
     } catch (e) {
-      print('❌ Error updating item quantity: $e');
+      AppLogger.error('Failed to update item quantity', e);
       rethrow;
     }
   }
@@ -104,7 +105,7 @@ class CartService {
       _sellerCarts[sellerId] = emptyCart;
       _notifyCartUpdate(sellerId, emptyCart);
     } catch (e) {
-      print('❌ Error clearing cart: $e');
+      AppLogger.error('Failed to clear cart', e);
       rethrow;
     }
   }
