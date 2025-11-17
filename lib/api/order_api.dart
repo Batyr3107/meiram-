@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
 import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/core/utils/json_parser.dart';
 import 'package:shop_app/services/auth_service.dart';
 
 /// Order API client
@@ -119,18 +120,8 @@ class CreateOrderResponse {
       orderId: json['orderId']?.toString() ?? '',
       status: json['status']?.toString() ?? 'PENDING',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: JsonParser.parseDateTime(json['createdAt']),
     );
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (e) {
-      AppLogger.warning('Invalid date format: $value');
-      return DateTime.now();
-    }
   }
 }
 
@@ -185,19 +176,9 @@ class BuyerOrderResponse {
       sellerName: json['sellerName']?.toString() ?? 'Продавец',
       totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'PENDING',
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: JsonParser.parseDateTime(json['createdAt']),
       itemsCount: (json['itemsCount'] as int?) ?? 0,
     );
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (e) {
-      AppLogger.warning('Invalid date format: $value');
-      return DateTime.now();
-    }
   }
 }
 
@@ -236,18 +217,8 @@ class BuyerOrderDetailResponse {
       items: (json['items'] as List?)
           ?.map((e) => OrderItemDetail.fromJson(e))
           .toList() ?? [],
-      createdAt: _parseDateTime(json['createdAt']),
+      createdAt: JsonParser.parseDateTime(json['createdAt']),
     );
-  }
-
-  static DateTime _parseDateTime(dynamic value) {
-    if (value == null) return DateTime.now();
-    try {
-      return DateTime.parse(value.toString());
-    } catch (e) {
-      AppLogger.warning('Invalid date format: $value');
-      return DateTime.now();
-    }
   }
 
   // Геттеры для совместимости с orders_screen.dart
