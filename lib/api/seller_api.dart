@@ -45,7 +45,12 @@ class SellerApi {
         },
       );
 
-      AppLogger.debug('Fetched ${response.data!['content'].length} sellers');
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
+      final contentLength = (response.data!['content'] as List?)?.length ?? 0;
+      AppLogger.debug('Fetched $contentLength sellers');
       return SellerListResponse.fromJson(response.data!);
     } catch (e, stack) {
       AppLogger.error('Failed to fetch sellers', e, stack);
@@ -62,7 +67,12 @@ class SellerApi {
         '/clients/sellers/$sellerId',
       );
 
-      AppLogger.debug('Fetched seller: ${response.data!['organizationName']}');
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
+      final orgName = response.data!['organizationName'] ?? 'Unknown';
+      AppLogger.debug('Fetched seller: $orgName');
       return SellerResponse.fromJson(response.data!);
     } catch (e, stack) {
       AppLogger.error('Failed to fetch seller $sellerId', e, stack);
@@ -88,13 +98,14 @@ class SellerListResponse {
 
   factory SellerListResponse.fromJson(Map<String, dynamic> json) {
     return SellerListResponse(
-      content: (json['content'] as List)
-          .map((item) => SellerResponse.fromJson(item))
-          .toList(),
-      totalPages: json['totalPages'] as int,
-      totalElements: json['totalElements'] as int,
-      size: json['size'] as int,
-      number: json['number'] as int,
+      content: (json['content'] as List?)
+              ?.map((item) => SellerResponse.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      totalPages: json['totalPages'] as int? ?? 0,
+      totalElements: json['totalElements'] as int? ?? 0,
+      size: json['size'] as int? ?? 0,
+      number: json['number'] as int? ?? 0,
     );
   }
 }
@@ -117,6 +128,11 @@ class SellerResponse {
   });
 
   factory SellerResponse.fromJson(Map<String, dynamic> json) {
+    // Validate required field
+    if (json['id'] == null) {
+      throw FormatException('Missing required field: id');
+    }
+
     return SellerResponse(
       id: json['id'].toString(),
       organizationName: json['organizationName'] as String? ?? 'Неизвестный продавец',

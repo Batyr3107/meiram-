@@ -36,6 +36,10 @@ class UserApi {
     try {
       final response = await _client.get<Map<String, dynamic>>('/users/me');
 
+      if (response.data == null) {
+        throw Exception('Empty response from server');
+      }
+
       AppLogger.debug('User profile retrieved');
       return UserProfileResponse.fromJson(response.data!);
     } catch (e, stack) {
@@ -57,6 +61,14 @@ class UserProfileResponse {
   });
 
   factory UserProfileResponse.fromJson(Map<String, dynamic> json) {
+    // Validate required fields
+    if (json['id'] == null) {
+      throw FormatException('Missing required field: id');
+    }
+    if (json['username'] == null) {
+      throw FormatException('Missing required field: username');
+    }
+
     return UserProfileResponse(
       id: json['id'].toString(),
       email: json['username'].toString(), // ← важно!

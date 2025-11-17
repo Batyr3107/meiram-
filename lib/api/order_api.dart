@@ -116,13 +116,21 @@ class CreateOrderResponse {
 
   factory CreateOrderResponse.fromJson(Map<String, dynamic> json) {
     return CreateOrderResponse(
-      orderId: json['orderId'].toString(),
+      orderId: json['orderId']?.toString() ?? '',
       status: json['status']?.toString() ?? 'PENDING',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+      createdAt: _parseDateTime(json['createdAt']),
     );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    try {
+      return DateTime.parse(value.toString());
+    } catch (e) {
+      AppLogger.warning('Invalid date format: $value');
+      return DateTime.now();
+    }
   }
 }
 
@@ -173,15 +181,23 @@ class BuyerOrderResponse {
 
   factory BuyerOrderResponse.fromJson(Map<String, dynamic> json) {
     return BuyerOrderResponse(
-      orderId: json['orderId'].toString(),
+      orderId: json['orderId']?.toString() ?? '',
       sellerName: json['sellerName']?.toString() ?? 'Продавец',
       totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'PENDING',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+      createdAt: _parseDateTime(json['createdAt']),
       itemsCount: (json['itemsCount'] as int?) ?? 0,
     );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    try {
+      return DateTime.parse(value.toString());
+    } catch (e) {
+      AppLogger.warning('Invalid date format: $value');
+      return DateTime.now();
+    }
   }
 }
 
@@ -211,7 +227,7 @@ class BuyerOrderDetailResponse {
 
   factory BuyerOrderDetailResponse.fromJson(Map<String, dynamic> json) {
     return BuyerOrderDetailResponse(
-      id: json['id'].toString(),
+      id: json['id']?.toString() ?? '',
       status: json['status']?.toString() ?? 'PENDING',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       deliveryType: json['deliveryType']?.toString() ?? 'PICKUP',
@@ -220,10 +236,18 @@ class BuyerOrderDetailResponse {
       items: (json['items'] as List?)
           ?.map((e) => OrderItemDetail.fromJson(e))
           .toList() ?? [],
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+      createdAt: _parseDateTime(json['createdAt']),
     );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    try {
+      return DateTime.parse(value.toString());
+    } catch (e) {
+      AppLogger.warning('Invalid date format: $value');
+      return DateTime.now();
+    }
   }
 
   // Геттеры для совместимости с orders_screen.dart
