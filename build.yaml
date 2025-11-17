@@ -1,0 +1,20 @@
+targets:
+  $default:
+    builders:
+      injectable_generator:injectable_builder:
+        enabled: true
+        options:
+          auto_register: true
+          
+      freezed:freezed:
+        enabled: true
+        
+      json_serializable:
+        enabled: true
+        options:
+          explicit_to_json: true
+          field_rename: snake
+          checked: true
+          
+      riverpod_generator:riverpod_generator:
+        enabled: true
