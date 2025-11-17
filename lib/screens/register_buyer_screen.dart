@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shop_app/core/di/injection.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
-import '../api/auth_api.dart';
+import 'package:shop_app/domain/usecases/login_usecase.dart';
+import 'package:shop_app/domain/usecases/register_buyer_usecase.dart';
 import 'sellers_screen.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
@@ -23,19 +25,16 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  static const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  final _api = AuthApi(_baseUrl);
+  // Используем DI для получения use cases
+  late final RegisterBuyerUseCase _registerUseCase;
+  late final LoginUseCase _loginUseCase;
 
   @override
   void initState() {
     super.initState();
-    if (_baseUrl.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('API_BASE_URL не задан. Используй --dart-define=API_BASE_URL=...')),
-        );
-      });
-    }
+    // Получаем Use Cases через DI
+    _registerUseCase = getIt<RegisterBuyerUseCase>();
+    _loginUseCase = getIt<LoginUseCase>();
   }
 
   @override
@@ -79,8 +78,8 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
     setState(() => _loading = true);
 
     try {
-      // 1. Регистрируем пользователя
-      final regResponse = await _api.registerBuyer(
+      // 1. Регистрируем пользователя через Use Case
+      final regResponse = await _registerUseCase.execute(
         email: _emailCtrl.text.trim(),
         phone: _phoneCtrl.text.trim(),
         password: _pwdCtrl.text,
@@ -88,23 +87,30 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
 
       AppLogger.info('Registration successful, user ID: ${regResponse.userId}');
 
-      // 2. Автоматически логинимся после регистрации
-      final loginResponse = await _api.login(
-        email: _emailCtrl.text.trim(),
-        password: _pwdCtrl.text,
+      // 2. Автоматически логинимся после регистрации через Use Case
+      final loginResponse = await _loginUseCase.execute(
+        _emailCtrl.text.trim(),
+        _pwdCtrl.text,
       );
 
       AppLogger.info('Auto-login successful, userId: ${loginResponse.userId}');
 
-      await AuthService.saveTokens(loginResponse); // ← AuthResponse целиком
+      await AuthService.saveTokens(loginResponse);
 
       AppLogger.info('Tokens saved successfully');
 
-      // 4. Переходим на экран продавцов
+      // 3. Переходим на главный экран
       if (!mounted) return;
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const AuthWrapper()),
+      );
+
+    } on ArgumentError catch (e) {
+      // Обработка ошибок валидации из Use Case
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
       );
 
     } on DioException catch (e) {
@@ -124,6 +130,7 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
       if (!mounted) return;
+      AppLogger.error('Registration error', e);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);

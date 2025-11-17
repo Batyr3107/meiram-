@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shop_app/core/constants/app_constants.dart';
+import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/domain/repositories/order_repository.dart';
 import '../api/order_api.dart';
 import 'main_screen.dart';
 
@@ -15,13 +18,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
   String _error = '';
   final List<BuyerOrderResponse> _orders = [];
 
-  static const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  late final OrderApi _orderApi;
+  // Используем DI для получения repository
+  late final IOrderRepository _orderRepository;
 
   @override
   void initState() {
     super.initState();
-    _orderApi = OrderApi(_baseUrl);
+    // Получаем IOrderRepository через DI
+    _orderRepository = getIt<IOrderRepository>();
     _loadOrders();
   }
 
@@ -32,7 +36,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
     });
 
     try {
-      final response = await _orderApi.getBuyerOrders(page: 0, size: 50);
+      // Используем IOrderRepository через DI
+      final response = await _orderRepository.getBuyerOrders(
+        page: 0,
+        size: AppConstants.largePageSize,
+      );
       setState(() {
         _orders
           ..clear()
@@ -55,7 +63,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
 
     try {
-      final details = await _orderApi.getOrderDetails(orderId);
+      // Используем IOrderRepository через DI
+      final details = await _orderRepository.getOrderDetails(orderId);
 
       if (!mounted) return;
       Navigator.pop(context);

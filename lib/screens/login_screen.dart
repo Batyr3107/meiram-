@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/core/error/app_error.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
-import '../api/auth_api.dart';
+import 'package:shop_app/domain/usecases/login_usecase.dart';
 import 'sellers_screen.dart';
 import 'register_buyer_screen.dart';
 import '../services/auth_service.dart';
@@ -26,19 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _emailError;
   String? _passwordError;
 
-  static const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  final _api = AuthApi(_baseUrl);
+  // Используем DI для получения use case
+  late final LoginUseCase _loginUseCase;
 
   @override
   void initState() {
     super.initState();
-    if (_baseUrl.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('API_BASE_URL не задан. Используй --dart-define=API_BASE_URL=...')),
-        );
-      });
-    }
+    // Получаем LoginUseCase через DI
+    _loginUseCase = getIt<LoginUseCase>();
   }
 
   @override
@@ -101,9 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
 
     try {
-      final res = await _api.login(
-        email: _emailCtrl.text.trim(),
-        password: _pwdCtrl.text,
+      // Используем LoginUseCase вместо прямого API вызова
+      final res = await _loginUseCase.execute(
+        _emailCtrl.text.trim(),
+        _pwdCtrl.text,
       );
 
       if (!mounted) return;
@@ -117,6 +115,16 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const AuthWrapper()),
       );
+
+    } on ValidationError catch (e) {
+      // Обработка ошибок валидации
+      if (!mounted) return;
+
+      if (e.message.contains('email')) {
+        setState(() => _emailError = 'Неверный формат email');
+      } else if (e.message.contains('password')) {
+        setState(() => _passwordError = 'Пароль должен содержать минимум 6 символов');
+      }
 
     } on DioException catch (e) {
       if (!mounted) return;

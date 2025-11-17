@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/core/di/injection.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/domain/repositories/address_repository.dart';
+import 'package:shop_app/domain/repositories/order_repository.dart';
 import '../services/cart_service.dart';
 import '../api/order_api.dart';
 import '../api/address_api.dart';
@@ -26,22 +29,24 @@ class _CartScreenState extends State<CartScreen> {
   String? _selectedAddressId;
   bool _showManualInput = false;
 
-  static const _baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-  late final OrderApi _orderApi;
-  late final AddressApi _addressApi;
+  // Используем DI для получения repositories
+  late final IOrderRepository _orderRepository;
+  late final IAddressRepository _addressRepository;
 
   @override
   void initState() {
     super.initState();
     _cart = widget.cart;
-    _orderApi = OrderApi(_baseUrl);
-    _addressApi = AddressApi(_baseUrl);
+    // Получаем repositories через DI
+    _orderRepository = getIt<IOrderRepository>();
+    _addressRepository = getIt<IAddressRepository>();
     _loadAddresses();
   }
 
   Future<void> _loadAddresses() async {
     try {
-      final addresses = await _addressApi.getAllAddresses();
+      // Используем IAddressRepository через DI
+      final addresses = await _addressRepository.getAllAddresses();
       if (mounted) {
         setState(() {
           _addresses = addresses;
@@ -184,7 +189,8 @@ class _CartScreenState extends State<CartScreen> {
     setState(() => _loading = true);
 
     try {
-      final result = await _orderApi.submitOrder(
+      // Используем IOrderRepository через DI
+      final result = await _orderRepository.submitOrder(
         cartId: _cart.cartId,
         comment: _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim(),
         deliveryAddress: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
@@ -511,7 +517,8 @@ class _CartScreenState extends State<CartScreen> {
                     }
 
                     try {
-                      final newAddr = await _addressApi.createAddress(addressText);
+                      // Используем IAddressRepository через DI
+                      final newAddr = await _addressRepository.createAddress(addressText);
                       await _loadAddresses();
                       setState(() {
                         _selectedAddressId = newAddr.id;
