@@ -1,62 +1,100 @@
 import 'package:dio/dio.dart';
-import '../services/auth_service.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/services/auth_service.dart';
 
+/// Order API client
+///
+/// Handles order management with automatic authentication.
 class OrderApi {
-  final Dio dio;
-
-  OrderApi(String baseUrl) : dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await AuthService.getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        final userId = await AuthService.getUserId();
-        if (userId != null) {
-          options.headers['X-User-Id'] = userId;
-        }
-        return handler.next(options);
-      },
-    ));
+  OrderApi() : _client = DioClient() {
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
+          final String? token = await AuthService.getAccessToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          final String? userId = await AuthService.getUserId();
+          if (userId != null) {
+            options.headers['X-User-Id'] = userId;
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
-  // Оформить заказ
+  final DioClient _client;
+
+  /// Submit order from cart
   Future<CreateOrderResponse> submitOrder({
     required String cartId,
     String? comment,
     String? deliveryAddress,
   }) async {
-    final body = {
+    final Map<String, dynamic> body = <String, dynamic>{
       'cartId': cartId,
       if (comment != null && comment.isNotEmpty) 'comment': comment,
       if (deliveryAddress != null && deliveryAddress.isNotEmpty)
         'deliveryAddress': deliveryAddress,
     };
 
-    print('📦 Submit order request: $body');
-    final res = await dio.post('/orders/submit', data: body);
-    print('📦 Submit order response: ${res.data}');
+    AppLogger.info('Submitting order from cart: $cartId');
 
-    return CreateOrderResponse.fromJson(res.data);
+    try {
+      final response = await _client.post<Map<String, dynamic>>(
+        '/orders/submit',
+        data: body,
+      );
+
+      AppLogger.info('Order submitted successfully');
+      return CreateOrderResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to submit order', e, stack);
+      rethrow;
+    }
   }
 
-  // Получить список заказов покупателя
+  /// Get buyer's orders with pagination
   Future<OrdersPageResponse> getBuyerOrders({
     int page = 0,
     int size = 20,
   }) async {
-    final res = await dio.get('/orders', queryParameters: {
-      'page': page,
-      'size': size,
-    });
+    AppLogger.debug('Fetching buyer orders: page=$page, size=$size');
 
-    return OrdersPageResponse.fromJson(res.data);
+    try {
+      final response = await _client.get<Map<String, dynamic>>(
+        '/orders',
+        queryParameters: <String, dynamic>{
+          'page': page,
+          'size': size,
+        },
+      );
+
+      AppLogger.debug('Fetched ${response.data!['content'].length} orders');
+      return OrdersPageResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch buyer orders', e, stack);
+      rethrow;
+    }
   }
 
-  // Получить детальную информацию о заказе
+  /// Get order details by ID
   Future<BuyerOrderDetailResponse> getOrderDetails(String orderId) async {
-    final res = await dio.get('/orders/$orderId');
-    return BuyerOrderDetailResponse.fromJson(res.data);
+    AppLogger.debug('Fetching order details: $orderId');
+
+    try {
+      final response = await _client.get<Map<String, dynamic>>(
+        '/orders/$orderId',
+      );
+
+      AppLogger.debug('Order details retrieved');
+      return BuyerOrderDetailResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch order details $orderId', e, stack);
+      rethrow;
+    }
   }
 }
 

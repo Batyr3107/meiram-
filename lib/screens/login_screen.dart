@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
 import '../api/auth_api.dart';
 import 'sellers_screen.dart';
 import 'register_buyer_screen.dart';
@@ -107,11 +108,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      print('✅ Login successful, userId: ${res.userId}');
+      AppLogger.info('Login successful, userId: ${res.userId}');
 
       await AuthService.saveTokens(res);
 
-      print('✅ Tokens saved successfully');
+      AppLogger.info('Tokens saved successfully');
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const AuthWrapper()),
@@ -139,14 +140,14 @@ class _LoginScreenState extends State<LoginScreen> {
       // Переводим ошибку на русский
       String russianMsg = _translateError(msg);
 
-      print('❌ Login error: $msg -> $russianMsg');
+      AppLogger.error('Login error: $msg -> $russianMsg');
 
       // Показываем ошибку
       setState(() => _passwordError = russianMsg);
 
     } catch (e) {
       if (!mounted) return;
-      print('❌ Unexpected error: $e');
+      AppLogger.error('Unexpected login error', e);
       setState(() => _passwordError = 'Ошибка: ${_translateError(e.toString())}');
     } finally {
       if (mounted) setState(() => _loading = false);

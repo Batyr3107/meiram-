@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:shop_app/core/logger/app_logger.dart';
 import 'package:uuid/uuid.dart';
 import 'cart_service.dart';
 import '../cache/product_cache.dart';
@@ -90,7 +91,7 @@ class AuthService {
     try {
       await _loadUserProfileFromToken();
     } catch (e) {
-      print('⚠️ Ошибка загрузки профиля из токена: $e');
+      AppLogger.warning('Failed to load user profile from token', e);
     }
 
     if (kIsWeb) {
@@ -110,23 +111,23 @@ class AuthService {
       await prefs.setString(_deviceIdKey, _deviceId!);
     }
 
-    print('✅ Токены сохранены, профиль загружен из токена');
+    AppLogger.info('Tokens saved and user profile loaded from token');
   }
 
   // === ЗАГРУЗКА ПРОФИЛЯ ИЗ JWT ТОКЕНА ===
   static Future<void> _loadUserProfileFromToken() async {
     if (_accessToken == null) {
-      print('❌ Нет access token для загрузки профиля');
+      AppLogger.debug('No access token available for profile loading');
       return;
     }
 
     try {
-      print('🔄 Извлечение email из JWT токена...');
+      AppLogger.debug('Extracting email from JWT token');
 
       // Декодируем JWT токен
       final parts = _accessToken!.split('.');
       if (parts.length != 3) {
-        print('❌ Неверный форток JWT токена');
+        AppLogger.warning('Invalid JWT token format');
         return;
       }
 
@@ -152,12 +153,12 @@ class AuthService {
           await prefs.setString(_userNameKey, _displayName);
         }
 
-        print('✅ Профиль загружен из токена: email=$_email, name=$_displayName');
+        AppLogger.info('User profile loaded from token: email=$_email, name=$_displayName');
       } else {
-        print('❌ Email не найден в JWT токене');
+        AppLogger.warning('Email not found in JWT token');
       }
     } catch (e) {
-      print('❌ Ошибка декодирования JWT токена: $e');
+      AppLogger.error('Failed to decode JWT token', e);
     }
   }
 
@@ -251,12 +252,12 @@ class AuthService {
       // После обновления токена также обновляем профиль
       await _loadUserProfileFromToken();
 
-      print('✅ Access токен успешно обновлён');
+      AppLogger.info('Access token successfully refreshed');
       _refreshCompleter?.complete();
       _refreshCompleter = null;
       return true;
     } catch (e) {
-      print('❌ Ошибка обновления токена: $e');
+      AppLogger.error('Failed to refresh access token', e);
       await clearTokens();
       _refreshCompleter?.complete();
       _refreshCompleter = null;

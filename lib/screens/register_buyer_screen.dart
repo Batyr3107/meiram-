@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
 import '../api/auth_api.dart';
 import 'sellers_screen.dart';
 import 'login_screen.dart';
@@ -85,7 +86,7 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
         password: _pwdCtrl.text,
       );
 
-      print('✅ Registration successful, user ID: ${regResponse.userId}');
+      AppLogger.info('Registration successful, user ID: ${regResponse.userId}');
 
       // 2. Автоматически логинимся после регистрации
       final loginResponse = await _api.login(
@@ -93,11 +94,11 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
         password: _pwdCtrl.text,
       );
 
-      print('✅ Auto-login successful, userId: ${loginResponse.userId}');
+      AppLogger.info('Auto-login successful, userId: ${loginResponse.userId}');
 
       await AuthService.saveTokens(loginResponse); // ← AuthResponse целиком
 
-      print('✅ Tokens saved successfully');
+      AppLogger.info('Tokens saved successfully');
 
       // 4. Переходим на экран продавцов
       if (!mounted) return;

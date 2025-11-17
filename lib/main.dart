@@ -1,32 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/theme/app_theme.dart';
+import 'package:shop_app/presentation/providers/theme_provider.dart';
 import 'screens/auth_wrapper.dart';
 import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Загружаем токены и пытаемся их обновить при старте
-  await AuthService.ensureLoaded();
+  // Initialize Dependency Injection
+  await configureDependencies();
+  AppLogger.info('Dependency Injection configured');
 
-  runApp(const ShopApp());
+  // Load auth tokens
+  await AuthService.ensureLoaded();
+  AppLogger.info('Auth service initialized');
+
+  runApp(
+    const ProviderScope(
+      child: ShopApp(),
+    ),
+  );
 }
 
-class ShopApp extends StatelessWidget {
+class ShopApp extends ConsumerWidget {
   const ShopApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp(
       title: 'Рынок продуктов',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-      ),
-      home: const AuthWrapper(), // ← Главная точка входа
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      home: const AuthWrapper(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -1,93 +1,138 @@
 import 'package:dio/dio.dart';
-import '../services/auth_service.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/services/auth_service.dart';
 
+/// Cart API client
+///
+/// Handles shopping cart operations with automatic authentication.
 class CartApi {
-  final Dio dio;
+  CartApi() : _client = DioClient() {
+    // Add auth headers interceptor
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
+          await AuthService.ensureLoaded();
 
-  CartApi(String baseUrl) : dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        await AuthService.ensureLoaded();
+          final String? token = AuthService.accessToken;
+          final String? userId = AuthService.userId;
 
-        final token = AuthService.accessToken;
-        final userId = AuthService.userId;
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
 
-        if (token != null && token.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
+          if (userId != null && userId.isNotEmpty) {
+            options.headers['X-User-Id'] = userId;
+            AppLogger.debug('X-User-Id header set: $userId');
+          } else {
+            AppLogger.warning('X-User-Id is missing or empty');
+          }
 
-        if (userId != null && userId.isNotEmpty) {
-          options.headers['X-User-Id'] = userId;
-          print('👤 X-User-Id header set: $userId');
-        } else {
-          print('⚠️ X-User-Id is missing or empty');
-        }
-
-        return handler.next(options);
-      },
-    ));
+          handler.next(options);
+        },
+      ),
+    );
   }
 
-  // === ОСНОВНОЙ МЕТОД: Получить корзину для конкретного продавца ===
+  final DioClient _client;
+
+  /// Get cart for specific seller
   Future<CartResponse> getSellerCart(String sellerId) async {
+    AppLogger.debug('Getting cart for seller: $sellerId');
+
     try {
-      print('🛒 Getting cart for seller: $sellerId');
-      final res = await dio.get('/orders/cart/seller/$sellerId');
-      print('🛒 Seller cart response: ${res.data}');
-      return CartResponse.fromJson(res.data);
-    } on DioException catch (e) {
-      print('❌ Seller cart error: ${e.response?.statusCode} - ${e.response?.data}');
+      final response = await _client.get<Map<String, dynamic>>(
+        '/orders/cart/seller/$sellerId',
+      );
+
+      AppLogger.debug('Cart retrieved for seller: $sellerId');
+      return CartResponse.fromJson(response.data!);
+    } on DioException catch (e, stack) {
+      AppLogger.warning('Cart error: ${e.response?.statusCode}');
+
       if (e.response?.statusCode == 404) {
-        print('🛒 Cart not found for seller, returning empty cart');
+        AppLogger.debug('Cart not found for seller, returning empty cart');
         return CartResponse.empty(sellerId: sellerId);
       }
+
+      AppLogger.error('Failed to get cart for seller $sellerId', e, stack);
       rethrow;
     }
   }
 
-  // Добавить товар в корзину (бэк сам определит продавца из productId)
+  /// Add item to cart (backend determines seller from productId)
   Future<CartResponse> addItemToCart({
     required String productId,
     required double quantity,
   }) async {
-    final body = {
+    final Map<String, dynamic> body = <String, dynamic>{
       'productId': productId,
       'quantity': quantity,
     };
 
-    print('🛒 Add to cart request: $body');
-    final res = await dio.post('/orders/cart/items', data: body);
-    print('🛒 Add to cart response: ${res.data}');
+    AppLogger.info('Adding to cart: $productId x $quantity');
 
-    return CartResponse.fromJson(res.data);
+    try {
+      final response = await _client.post<Map<String, dynamic>>(
+        '/orders/cart/items',
+        data: body,
+      );
+
+      AppLogger.info('Item added to cart successfully');
+      return CartResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to add item to cart', e, stack);
+      rethrow;
+    }
   }
 
-  // Удалить товар из корзины
+  /// Remove item from cart
   Future<void> removeItemFromCart(String itemId) async {
-    print('🗑️ Removing item $itemId from cart...');
-    await dio.delete('/orders/cart/items/$itemId');
-    print('🗑️ Item removed successfully');
+    AppLogger.info('Removing item from cart: $itemId');
+
+    try {
+      await _client.delete<void>('/orders/cart/items/$itemId');
+      AppLogger.info('Item removed successfully');
+    } catch (e, stack) {
+      AppLogger.error('Failed to remove item $itemId', e, stack);
+      rethrow;
+    }
   }
 
-  // Обновить количество товара
+  /// Update item quantity
   Future<CartResponse> updateItemQuantity({
     required String itemId,
     required double quantity,
   }) async {
-    final body = {'quantity': quantity};
+    final Map<String, dynamic> body = <String, dynamic>{'quantity': quantity};
 
-    print('📝 Updating item $itemId quantity to $quantity...');
-    final res = await dio.put('/orders/cart/items/$itemId', data: body);
-    print('📝 Item updated: ${res.data}');
+    AppLogger.info('Updating item $itemId quantity to $quantity');
 
-    return CartResponse.fromJson(res.data);
+    try {
+      final response = await _client.put<Map<String, dynamic>>(
+        '/orders/cart/items/$itemId',
+        data: body,
+      );
+
+      AppLogger.info('Item quantity updated successfully');
+      return CartResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to update item quantity', e, stack);
+      rethrow;
+    }
   }
 
-  // Очистить корзину конкретного продавца
+  /// Clear cart for specific seller
   Future<void> clearSellerCart(String sellerId) async {
-    print('🗑️ Clearing cart for seller: $sellerId');
-    await dio.delete('/orders/cart/seller/$sellerId');
-    print('🗑️ Seller cart cleared successfully');
+    AppLogger.info('Clearing cart for seller: $sellerId');
+
+    try {
+      await _client.delete<void>('/orders/cart/seller/$sellerId');
+      AppLogger.info('Seller cart cleared successfully');
+    } catch (e, stack) {
+      AppLogger.error('Failed to clear cart for seller $sellerId', e, stack);
+      rethrow;
+    }
   }
 }
 
@@ -118,15 +163,8 @@ class CartResponse {
   }
 
   factory CartResponse.fromJson(Map<String, dynamic> json) {
-    print('📦 === PARSING CART RESPONSE START ===');
-    print('📦 All JSON keys: ${json.keys.toList()}');
-    print('📦 cartId value: ${json['cartId']}');
-    print('📦 sellerId value: ${json['sellerId']}');
-
-    final cartId = json['cartId']?.toString() ?? '';
-
-    print('📦 Final cartId: "$cartId"');
-    print('📦 === PARSING CART RESPONSE END ===');
+    final String cartId = json['cartId']?.toString() ?? '';
+    AppLogger.debug('Parsing cart response - cartId: $cartId');
 
     return CartResponse(
       cartId: cartId,

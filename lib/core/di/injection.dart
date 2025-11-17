@@ -1,36 +1,61 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shop_app/api/address_api.dart';
+import 'package:shop_app/api/auth_api.dart';
+import 'package:shop_app/api/cart_api.dart';
+import 'package:shop_app/api/order_api.dart';
+import 'package:shop_app/api/product_api.dart';
+import 'package:shop_app/api/seller_api.dart';
+import 'package:shop_app/data/repositories/address_repository_impl.dart';
+import 'package:shop_app/data/repositories/auth_repository_impl.dart';
+import 'package:shop_app/data/repositories/cart_repository_impl.dart';
+import 'package:shop_app/data/repositories/order_repository_impl.dart';
+import 'package:shop_app/data/repositories/product_repository_impl.dart';
+import 'package:shop_app/data/repositories/seller_repository_impl.dart';
+import 'package:shop_app/domain/repositories/address_repository.dart';
+import 'package:shop_app/domain/repositories/auth_repository.dart';
+import 'package:shop_app/domain/repositories/cart_repository.dart';
+import 'package:shop_app/domain/repositories/order_repository.dart';
+import 'package:shop_app/domain/repositories/product_repository.dart';
+import 'package:shop_app/domain/repositories/seller_repository.dart';
 
-/// Dependency Injection container
-/// 
-/// Provides centralized service location and dependency injection
-/// following the Service Locator pattern with GetIt.
-/// 
-/// Usage:
-/// ```dart
-/// // Get instance
-/// final authService = getIt<AuthService>();
-/// 
-/// // Register manually (if not using @injectable)
-/// getIt.registerSingleton<MyService>(MyService());
-/// ```
-final GetIt getIt = GetIt.instance;
+final getIt = GetIt.instance;
 
-/// Initialize dependency injection
-/// 
-/// Call this in main() before runApp():
-/// ```dart
-/// void main() async {
-///   WidgetsFlutterBinding.ensureInitialized();
-///   await configureDependencies();
-///   runApp(MyApp());
-/// }
-/// ```
+/// Configure dependency injection
+///
+/// Call this method in main() before runApp()
 @InjectableInit()
 Future<void> configureDependencies() async {
-  // Manual registrations for critical services
-  // Auto-generated registrations will be added by build_runner
-  
-  // Register core services
-  // getIt.registerLazySingleton<AppLogger>(() => AppLogger());
+  // Register API Clients
+  getIt.registerLazySingleton<AuthApi>(() => AuthApi());
+  getIt.registerLazySingleton<ProductApi>(() => ProductApi());
+  getIt.registerLazySingleton<CartApi>(() => CartApi());
+  getIt.registerLazySingleton<OrderApi>(() => OrderApi());
+  getIt.registerLazySingleton<SellerApi>(() => SellerApi());
+  getIt.registerLazySingleton<AddressApi>(() => AddressApi());
+
+  // Register Repositories
+  getIt.registerLazySingleton<IAuthRepository>(
+    () => AuthRepositoryImpl(getIt<AuthApi>()),
+  );
+  getIt.registerLazySingleton<IProductRepository>(
+    () => ProductRepositoryImpl(getIt<ProductApi>()),
+  );
+  getIt.registerLazySingleton<ICartRepository>(
+    () => CartRepositoryImpl(getIt<CartApi>()),
+  );
+  getIt.registerLazySingleton<IOrderRepository>(
+    () => OrderRepositoryImpl(getIt<OrderApi>()),
+  );
+  getIt.registerLazySingleton<ISellerRepository>(
+    () => SellerRepositoryImpl(getIt<SellerApi>()),
+  );
+  getIt.registerLazySingleton<IAddressRepository>(
+    () => AddressRepositoryImpl(getIt<AddressApi>()),
+  );
+}
+
+/// Reset dependency injection (for testing)
+Future<void> resetDependencies() async {
+  await getIt.reset();
 }

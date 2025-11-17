@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'main_screen.dart';
@@ -31,7 +32,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         if (snapshot.hasError) {
-          print('AuthWrapper error: ${snapshot.error}');
+          AppLogger.error('AuthWrapper error', snapshot.error, snapshot.stackTrace);
           return const HomeScreen();
         }
 

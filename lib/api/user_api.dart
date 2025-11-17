@@ -1,31 +1,47 @@
 import 'package:dio/dio.dart';
-import '../services/auth_service.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/services/auth_service.dart';
 
+/// User API client
+///
+/// Handles user profile operations with automatic authentication.
 class UserApi {
-  final Dio _dio;
+  UserApi() : _client = DioClient() {
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
+          await AuthService.ensureLoaded();
+          final String? token = AuthService.accessToken;
+          final String? userId = AuthService.userId;
 
-  UserApi(String baseUrl)
-      : _dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        await AuthService.ensureLoaded();
-        final token = AuthService.accessToken;
-        final userId = AuthService.userId;
-
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        if (userId != null) {
-          options.headers['X-User-Id'] = userId;
-        }
-        handler.next(options);
-      },
-    ));
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          if (userId != null) {
+            options.headers['X-User-Id'] = userId;
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
+  final DioClient _client;
+
+  /// Get current user profile
   Future<UserProfileResponse> getMe() async {
-    final response = await _dio.get('/users/me');
-    return UserProfileResponse.fromJson(response.data);
+    AppLogger.debug('Fetching user profile');
+
+    try {
+      final response = await _client.get<Map<String, dynamic>>('/users/me');
+
+      AppLogger.debug('User profile retrieved');
+      return UserProfileResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch user profile', e, stack);
+      rethrow;
+    }
   }
 }
 

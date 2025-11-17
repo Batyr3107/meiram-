@@ -1,53 +1,102 @@
 import 'package:dio/dio.dart';
-import '../services/auth_service.dart';
+import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/network/dio_client.dart';
+import 'package:shop_app/services/auth_service.dart';
 
+/// Address API client
+///
+/// Handles address management with automatic authentication.
 class AddressApi {
-  final Dio dio;
-
-  AddressApi(String baseUrl) : dio = Dio(BaseOptions(baseUrl: baseUrl)) {
-    dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await AuthService.getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        final userId = await AuthService.getUserId();
-        if (userId != null) {
-          options.headers['X-User-Id'] = userId;
-        }
-        return handler.next(options);
-      },
-    ));
+  AddressApi() : _client = DioClient() {
+    _client.dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (RequestOptions options, RequestInterceptorHandler handler) async {
+          final String? token = await AuthService.getAccessToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          final String? userId = await AuthService.getUserId();
+          if (userId != null) {
+            options.headers['X-User-Id'] = userId;
+          }
+          handler.next(options);
+        },
+      ),
+    );
   }
 
-  // Получить все адреса покупателя
+  final DioClient _client;
+
+  /// Get all buyer addresses
   Future<List<AddressResponse>> getAllAddresses() async {
-    final res = await dio.get('/api/v1/addresses');
-    return (res.data as List)
-        .map((e) => AddressResponse.fromJson(e))
-        .toList();
+    AppLogger.debug('Fetching all addresses');
+
+    try {
+      final response = await _client.get<List<dynamic>>('/api/v1/addresses');
+      final List<AddressResponse> addresses = (response.data as List<dynamic>)
+          .map((dynamic e) => AddressResponse.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      AppLogger.debug('Fetched ${addresses.length} addresses');
+      return addresses;
+    } catch (e, stack) {
+      AppLogger.error('Failed to fetch addresses', e, stack);
+      rethrow;
+    }
   }
 
-  // Создать новый адрес
+  /// Create new address
   Future<AddressResponse> createAddress(String address) async {
-    final body = {'address': address};
-    final res = await dio.post('/api/v1/addresses', data: body);
-    return AddressResponse.fromJson(res.data);
+    AppLogger.info('Creating new address');
+
+    try {
+      final Map<String, dynamic> body = <String, dynamic>{'address': address};
+      final response = await _client.post<Map<String, dynamic>>(
+        '/api/v1/addresses',
+        data: body,
+      );
+
+      AppLogger.info('Address created successfully');
+      return AddressResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to create address', e, stack);
+      rethrow;
+    }
   }
 
-  // Обновить адрес
+  /// Update existing address
   Future<AddressResponse> updateAddress(String id, String address) async {
-    final body = {
-      'id': id,
-      'address': address,
-    };
-    final res = await dio.put('/api/v1/addresses', data: body);
-    return AddressResponse.fromJson(res.data);
+    AppLogger.info('Updating address: $id');
+
+    try {
+      final Map<String, dynamic> body = <String, dynamic>{
+        'id': id,
+        'address': address,
+      };
+      final response = await _client.put<Map<String, dynamic>>(
+        '/api/v1/addresses',
+        data: body,
+      );
+
+      AppLogger.info('Address updated successfully');
+      return AddressResponse.fromJson(response.data!);
+    } catch (e, stack) {
+      AppLogger.error('Failed to update address $id', e, stack);
+      rethrow;
+    }
   }
 
-  // Удалить адрес
+  /// Delete address
   Future<void> deleteAddress(String id) async {
-    await dio.delete('/api/v1/addresses/$id');
+    AppLogger.info('Deleting address: $id');
+
+    try {
+      await _client.delete<void>('/api/v1/addresses/$id');
+      AppLogger.info('Address deleted successfully');
+    } catch (e, stack) {
+      AppLogger.error('Failed to delete address $id', e, stack);
+      rethrow;
+    }
   }
 }
 
