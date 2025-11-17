@@ -128,13 +128,25 @@ class CartService {
     return _sellerCarts[sellerId];
   }
 
-  // Очистить кэш корзины (при logout)
+  // Освободить ресурсы для конкретного продавца (при dispose экрана)
+  static void disposeSellerCart(String sellerId) {
+    final controller = _cartStreams[sellerId];
+    if (controller != null) {
+      controller.close();
+      _cartStreams.remove(sellerId);
+      AppLogger.debug('Disposed cart stream for seller: $sellerId');
+    }
+    // Кэш оставляем для быстрого возврата на экран
+  }
+
+  // Очистить весь кэш корзины (при logout)
   static void clearCache() {
     _sellerCarts.clear();
     for (final controller in _cartStreams.values) {
       controller.close();
     }
     _cartStreams.clear();
+    AppLogger.debug('Cleared all cart caches');
   }
 
   // Уведомить об изменении корзины
