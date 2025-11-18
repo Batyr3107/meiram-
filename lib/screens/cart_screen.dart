@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop_app/core/di/injection.dart';
 import 'package:shop_app/core/logger/app_logger.dart';
+import 'package:shop_app/core/utils/responsive_helper.dart';
 import 'package:shop_app/domain/repositories/address_repository.dart';
 import 'package:shop_app/domain/repositories/order_repository.dart';
 import '../services/cart_service.dart';
@@ -271,6 +272,7 @@ class _CartScreenState extends State<CartScreen> {
 
     if (_cart.items.isEmpty) {
       return Scaffold(
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: const Text('Корзина'),
           backgroundColor: Colors.green[100],
@@ -296,6 +298,7 @@ class _CartScreenState extends State<CartScreen> {
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Корзина'),
         backgroundColor: Colors.green[100],
@@ -558,8 +561,8 @@ class _CartScreenState extends State<CartScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 100,
-                height: 100,
+                width: ResponsiveHelper.iconSize(context, 100),
+                height: ResponsiveHelper.iconSize(context, 100),
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(50),
@@ -661,8 +664,8 @@ class _CartItemTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: ResponsiveHelper.iconSize(context, 50),
+              height: ResponsiveHelper.iconSize(context, 50),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(8),

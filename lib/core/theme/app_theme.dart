@@ -5,13 +5,13 @@ class AppTheme {
   // Private constructor to prevent instantiation
   AppTheme._();
 
-  // Color schemes
-  static const Color primaryLight = Color(0xFF6200EE);
-  static const Color primaryDark = Color(0xFFBB86FC);
-  static const Color secondaryLight = Color(0xFF03DAC6);
-  static const Color secondaryDark = Color(0xFF03DAC6);
-  static const Color errorLight = Color(0xFFB00020);
-  static const Color errorDark = Color(0xFFCF6679);
+  // Color schemes - Fresh & Modern for Food Marketplace
+  static const Color primaryLight = Color(0xFF4CAF50);  // Material Green 500
+  static const Color primaryDark = Color(0xFF81C784);   // Material Green 300
+  static const Color secondaryLight = Color(0xFFFF9800); // Orange for accents
+  static const Color secondaryDark = Color(0xFFFFB74D);  // Light Orange
+  static const Color errorLight = Color(0xFFD32F2F);
+  static const Color errorDark = Color(0xFFEF5350);
 
   /// Light Theme
   static ThemeData get lightTheme {
@@ -33,7 +33,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -70,20 +70,20 @@ class AppTheme {
         primary: primaryDark,
         secondary: secondaryDark,
         error: errorDark,
-        surface: const Color(0xFF1E1E1E),
+        surface: const Color(0xFF2C2C2C), // Increased contrast
         background: const Color(0xFF121212),
       ),
       scaffoldBackgroundColor: const Color(0xFF121212),
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: Color(0xFF1E1E1E),
+        backgroundColor: Color(0xFF2C2C2C), // Increased contrast
         foregroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      cardTheme: CardTheme(
-        elevation: 2,
-        color: const Color(0xFF1E1E1E),
+      cardTheme: CardThemeData(
+        elevation: 4, // Increased elevation for better depth
+        color: const Color(0xFF2C2C2C), // Increased contrast
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/core/utils/responsive_helper.dart';
 import '../services/auth_service.dart';
 import 'orders_screen.dart';
 import 'addresses_screen.dart';
@@ -93,8 +94,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         // Аватар
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: ResponsiveHelper.iconSize(context, 80),
+                          height: ResponsiveHelper.iconSize(context, 80),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -297,8 +298,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: ResponsiveHelper.iconSize(context, 44),
+                height: ResponsiveHelper.iconSize(context, 44),
                 decoration: BoxDecoration(
                   color: isLogout
                       ? Colors.red.withOpacity(0.15)

@@ -168,6 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final cs = t.colorScheme;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Fix keyboard overlay
       appBar: AppBar(
         title: const Text('Вход в аккаунт'),
         leading: IconButton(
@@ -176,11 +177,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView( // Fix overflow on small screens
           padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Заголовок
                 Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/core/utils/responsive_helper.dart';
 import 'package:shop_app/domain/usecases/get_products_usecase.dart';
 import '../api/seller_api.dart';
 import '../api/product_api.dart';
@@ -473,8 +474,8 @@ class _ProductTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: ResponsiveHelper.iconSize(context, 56),
+              height: ResponsiveHelper.iconSize(context, 56),
               decoration: BoxDecoration(
                 color: cs.primary.withOpacity(.12),
                 borderRadius: BorderRadius.circular(10),
@@ -531,16 +532,16 @@ class _ProductTile extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             loading
-                ? const SizedBox(
-              width: 52,
-              height: 52,
-              child: CircularProgressIndicator(strokeWidth: 2),
+                ? SizedBox(
+              width: ResponsiveHelper.iconSize(context, 52),
+              height: ResponsiveHelper.iconSize(context, 52),
+              child: const CircularProgressIndicator(strokeWidth: 2),
             )
                 : FilledButton.tonal(
               onPressed: onAddToCart,
               style: FilledButton.styleFrom(
-                minimumSize: const Size(56, 56),
-                maximumSize: const Size(56, 56),
+                minimumSize: Size(ResponsiveHelper.iconSize(context, 56), ResponsiveHelper.iconSize(context, 56)),
+                maximumSize: Size(ResponsiveHelper.iconSize(context, 56), ResponsiveHelper.iconSize(context, 56)),
                 padding: EdgeInsets.zero,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),

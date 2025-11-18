@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shop_app/core/constants/app_constants.dart';
 import 'package:shop_app/core/di/injection.dart';
+import 'package:shop_app/core/utils/responsive_helper.dart';
 import 'package:shop_app/domain/repositories/order_repository.dart';
 import '../api/order_api.dart';
 import 'main_screen.dart';
@@ -396,7 +397,7 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
+          SizedBox(width: ResponsiveHelper.adaptiveWidth(context, percentage: 30, min: 100, max: 150), child: Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant))),
           Expanded(child: widget ?? Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600))),
         ],
       ),
@@ -420,8 +421,8 @@ class _OrderItemTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: ResponsiveHelper.iconSize(context, 48),
+              height: ResponsiveHelper.iconSize(context, 48),
               decoration: BoxDecoration(color: cs.primaryContainer.withOpacity(0.3), borderRadius: BorderRadius.circular(8)),
               child: Icon(Icons.shopping_bag_rounded, size: 24, color: cs.primary),
             ),

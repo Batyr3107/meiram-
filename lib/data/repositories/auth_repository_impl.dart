@@ -117,4 +117,25 @@ class AuthRepositoryImpl implements IAuthRepository {
       }
     });
   }
+
+  @override
+  bool isAuthenticated() {
+    // This should check if tokens exist in secure storage
+    // For now, return false as this is typically handled by AuthService
+    return false;
+  }
+
+  @override
+  String? getUserId() {
+    // This should read user ID from tokens or secure storage
+    // For now, return null as this is typically handled by AuthService
+    return null;
+  }
+
+  @override
+  String? getUserEmail() {
+    // This should read user email from tokens or secure storage
+    // For now, return null as this is typically handled by AuthService
+    return null;
+  }
 }

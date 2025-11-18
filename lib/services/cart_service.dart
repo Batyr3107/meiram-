@@ -16,7 +16,7 @@ class CartService {
     // Загружаем с бэкенда
     try {
       final baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: '');
-      final cartApi = CartApi(baseUrl);
+      final cartApi = CartApi();
       final cart = await cartApi.getSellerCart(sellerId);
 
       _sellerCarts[sellerId] = cart;
@@ -38,7 +38,7 @@ class CartService {
   }) async {
     try {
       final baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: '');
-      final cartApi = CartApi(baseUrl);
+      final cartApi = CartApi();
       final updatedCart = await cartApi.addItemToCart(
         productId: productId,
         quantity: quantity,
@@ -58,7 +58,7 @@ class CartService {
   static Future<void> removeItemFromCart(String sellerId, String itemId) async {
     try {
       final baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: '');
-      final cartApi = CartApi(baseUrl);
+      final cartApi = CartApi();
       await cartApi.removeItemFromCart(itemId);
 
       // Перезагружаем корзину для обновления кэша
@@ -79,7 +79,7 @@ class CartService {
   }) async {
     try {
       final baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: '');
-      final cartApi = CartApi(baseUrl);
+      final cartApi = CartApi();
       final updatedCart = await cartApi.updateItemQuantity(
         itemId: itemId,
         quantity: quantity,
@@ -98,7 +98,7 @@ class CartService {
   static Future<void> clearSellerCart(String sellerId) async {
     try {
       final baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: '');
-      final cartApi = CartApi(baseUrl);
+      final cartApi = CartApi();
       await cartApi.clearSellerCart(sellerId);
 
       final emptyCart = CartResponse.empty(sellerId: sellerId);

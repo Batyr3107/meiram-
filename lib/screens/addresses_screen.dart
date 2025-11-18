@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shop_app/core/utils/responsive_helper.dart';
 import '../api/address_api.dart';
 
 class AddressesScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   void initState() {
     super.initState();
-    _addressApi = AddressApi(_baseUrl);
+    _addressApi = AddressApi();
     _loadAddresses();
   }
 
@@ -195,6 +196,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Мои адреса'),
         backgroundColor: Colors.green[100],
@@ -285,8 +287,8 @@ class _AddressTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: ResponsiveHelper.iconSize(context, 48),
+              height: ResponsiveHelper.iconSize(context, 48),
               decoration: BoxDecoration(
                 color: cs.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),

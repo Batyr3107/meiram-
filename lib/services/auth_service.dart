@@ -221,8 +221,7 @@ class AuthService {
         return false;
       }
 
-      final baseUrl = const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080');
-      final authApi = AuthApi(baseUrl);
+      final authApi = AuthApi();
 
       // Отправляем refreshToken и deviceId, получаем новый accessToken
       final response = await authApi.refresh(

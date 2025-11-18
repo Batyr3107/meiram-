@@ -143,6 +143,7 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
     final cs = t.colorScheme;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Fix keyboard overlay
       appBar: AppBar(
         title: const Text('Регистрация покупателя'),
         leading: IconButton(
@@ -151,11 +152,12 @@ class _RegisterBuyerScreenState extends State<RegisterBuyerScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView( // Fix overflow on small screens
           padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text('Создайте аккаунт покупателя', style: t.textTheme.titleLarge),
                 const SizedBox(height: 16),
