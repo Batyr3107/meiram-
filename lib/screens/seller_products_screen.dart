@@ -517,6 +517,8 @@ class _ProductTile extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                           color: cs.primary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (p.minOrderQty > 0)
                         Text(
@@ -524,6 +526,8 @@ class _ProductTile extends StatelessWidget {
                           style: Theme.of(context).textTheme.labelMedium?.copyWith(
                             color: cs.onSurfaceVariant,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                     ],
                   ),

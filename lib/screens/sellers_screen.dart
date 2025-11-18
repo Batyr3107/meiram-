@@ -136,6 +136,8 @@ class _SellersScreenState extends State<SellersScreen> {
           title: Text(
             seller.organizationName,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
             seller.description.isNotEmpty ? seller.description : 'Без описания',
