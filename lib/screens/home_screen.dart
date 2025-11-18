@@ -147,6 +147,9 @@ class _HeroSection extends StatelessWidget {
                     color: colorScheme.onSurfaceVariant,
                     height: 1.4,
                   ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
                 ),
                 const SizedBox(height: 16),
                 // Stats Row
@@ -163,9 +166,9 @@ class _HeroSection extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _StatItem(number: '500+', label: 'Товаров'),
-        _StatItem(number: '99%', label: 'Довольных\nклиентов'),
-        _StatItem(number: '2ч', label: 'Доставка'),
+        Flexible(child: _StatItem(number: '500+', label: 'Товаров')),
+        Flexible(child: _StatItem(number: '99%', label: 'Довольных\nклиентов')),
+        Flexible(child: _StatItem(number: '2ч', label: 'Доставка')),
       ],
     );
   }
@@ -188,6 +191,8 @@ class _StatItem extends StatelessWidget {
             fontWeight: FontWeight.w700,
             color: cs.primary,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 2),
         Text(
@@ -197,6 +202,9 @@ class _StatItem extends StatelessWidget {
             height: 1.1,
           ),
           textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          softWrap: true,
         ),
       ],
     );
@@ -351,6 +359,9 @@ class _WarehouseAdvantageSection extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -358,6 +369,9 @@ class _WarehouseAdvantageSection extends StatelessWidget {
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                     ),
                   ],
                 ),
@@ -446,6 +460,9 @@ class _AdvantageItem extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   color: colorScheme.onSurface,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
               ),
               const SizedBox(height: 2),
               Text(
@@ -454,6 +471,9 @@ class _AdvantageItem extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                   height: 1.3,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
               ),
             ],
           ),

@@ -19,11 +19,20 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   Future<void> _loadThemeMode() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final themeIndex = prefs.getInt(_themeKey) ?? 0;
-      state = ThemeMode.values[themeIndex];
-      AppLogger.debug('Theme mode loaded: $state');
+      final themeIndex = prefs.getInt(_themeKey);
+
+      // Если значение не сохранено, используем светлую тему по умолчанию
+      if (themeIndex == null) {
+        state = ThemeMode.light;
+        AppLogger.debug('Theme mode not found, using default: light');
+      } else {
+        state = ThemeMode.values[themeIndex];
+        AppLogger.debug('Theme mode loaded: $state');
+      }
     } catch (e) {
       AppLogger.error('Failed to load theme mode', e);
+      // В случае ошибки всегда используем светлую тему
+      state = ThemeMode.light;
     }
   }
 

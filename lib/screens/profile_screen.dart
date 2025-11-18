@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shop_app/core/utils/responsive_helper.dart';
+import 'package:shop_app/presentation/providers/theme_provider.dart';
 import '../services/auth_service.dart';
 import 'orders_screen.dart';
 import 'addresses_screen.dart';
 import 'login_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late Future<void> _initFuture;
 
   @override
@@ -232,6 +234,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         cs: cs,
                         textTheme: textTheme,
                       ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Настройки',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildThemeToggleCard(cs, textTheme),
                     ],
                   ),
                 ),
@@ -332,6 +344,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildThemeToggleCard(ColorScheme cs, TextTheme textTheme) {
+    final themeNotifier = ref.read(themeModeProvider.notifier);
+    final currentMode = ref.watch(themeModeProvider);
+    final isDark = currentMode == ThemeMode.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.outline.withOpacity(0.1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.shadow.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: ResponsiveHelper.iconSize(context, 44),
+            height: ResponsiveHelper.iconSize(context, 44),
+            decoration: BoxDecoration(
+              color: cs.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              isDark ? Icons.dark_mode : Icons.light_mode,
+              color: cs.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Тема оформления',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isDark ? 'Темная' : 'Светлая',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: isDark,
+            onChanged: (_) => themeNotifier.toggleTheme(),
+            activeColor: cs.primary,
+          ),
+        ],
       ),
     );
   }
