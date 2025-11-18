@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 
 /// Base class for all application errors
 abstract class AppError implements Exception {
-  const AppError(this.message, this.code);
+  const AppError(this.message, {this.code});
 
   final String message;
   final String? code;
