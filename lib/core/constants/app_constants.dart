@@ -1,8 +1,11 @@
 /// Application-wide constants
 class AppConstants {
   // API
+  // ВАЖНО: Замените на реальный IP вашего сервера!
+  // Для локальной сети: 'http://192.168.x.x:8080'
+  // Для облака: 'https://your-domain.com'
   static const String apiBaseUrl =
-      String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080');
+      String.fromEnvironment('API_BASE_URL', defaultValue: 'http://192.168.1.100:8080');
   static const Duration apiTimeout = Duration(seconds: 30);
 
   // Cache

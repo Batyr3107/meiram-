@@ -52,6 +52,54 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  Widget _buildHeader(BuildContext context, ColorScheme cs, TextTheme textTheme) {
+    return Column(
+      children: [
+        // Иконка в круге с градиентом
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primary, cs.primary.withOpacity(0.7)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: cs.primary.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.login_rounded,
+            size: 40,
+            color: cs.onPrimary,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'С возвращением!',
+          style: textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: cs.onSurface,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Войдите, чтобы продолжить покупки',
+          style: textTheme.bodyMedium?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
   // === ПЕРЕВОД ОШИБОК НА РУССКИЙ ===
   String _translateError(String msg) {
     final lower = msg.toLowerCase();
@@ -168,125 +216,153 @@ class _LoginScreenState extends State<LoginScreen> {
     final cs = t.colorScheme;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, // Fix keyboard overlay
+      resizeToAvoidBottomInset: true,
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        title: const Text('Вход в аккаунт'),
+        title: const Text('Вход'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: cs.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView( // Fix overflow on small screens
-          padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Заголовок
-                Text(
-                  'Войдите в свой аккаунт',
-                  style: t.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Введите ваши данные для входа',
-                  style: t.textTheme.bodyMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 24),
+                // Красивый заголовок с иконкой
+                _buildHeader(context, cs, t.textTheme),
+                const SizedBox(height: 32),
 
-                // Email поле с красивой ошибкой
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _emailCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        hintText: 'user@example.com',
-                        border: const OutlineInputBorder(),
-                        enabledBorder: _emailError != null
-                            ? OutlineInputBorder(
-                          borderSide: BorderSide(color: cs.error),
-                        )
-                            : null,
-                        focusedBorder: _emailError != null
-                            ? OutlineInputBorder(
-                          borderSide: BorderSide(color: cs.error, width: 2),
-                        )
-                            : null,
-                        prefixIcon: const Icon(Icons.email_rounded),
-                        errorText: null,
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (_) => _clearErrors(),
+                // Красивая форма в карточке
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: cs.outline.withOpacity(0.1),
                     ),
-                    if (_emailError != null) ...[
-                      const SizedBox(height: 4),
-                      _ErrorText(text: _emailError!),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Password поле с красивой ошибкой
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: _pwdCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Пароль',
-                        border: const OutlineInputBorder(),
-                        enabledBorder: _passwordError != null
-                            ? OutlineInputBorder(
-                          borderSide: BorderSide(color: cs.error),
-                        )
-                            : null,
-                        focusedBorder: _passwordError != null
-                            ? OutlineInputBorder(
-                          borderSide: BorderSide(color: cs.error, width: 2),
-                        )
-                            : null,
-                        prefixIcon: const Icon(Icons.lock_rounded),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                            color: cs.onSurfaceVariant,
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // Email поле
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _emailCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              hintText: 'example@mail.com',
+                              filled: true,
+                              fillColor: cs.surface,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _emailError != null ? cs.error : cs.outline.withOpacity(0.2),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _emailError != null ? cs.error : cs.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(Icons.email_rounded, color: cs.primary),
+                              errorText: null,
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            onChanged: (_) => _clearErrors(),
                           ),
-                          onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
-                          },
-                        ),
-                        errorText: null,
+                          if (_emailError != null) ...[
+                            const SizedBox(height: 8),
+                            _ErrorText(text: _emailError!),
+                          ],
+                        ],
                       ),
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      onChanged: (_) => _clearErrors(),
-                      onFieldSubmitted: (_) => _submit(),
-                    ),
-                    if (_passwordError != null) ...[
-                      const SizedBox(height: 4),
-                      _ErrorText(text: _passwordError!),
+                      const SizedBox(height: 16),
+
+                      // Password поле
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: _pwdCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Пароль',
+                              filled: true,
+                              fillColor: cs.surface,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: cs.outline.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _passwordError != null ? cs.error : cs.outline.withOpacity(0.2),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _passwordError != null ? cs.error : cs.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              prefixIcon: Icon(Icons.lock_rounded, color: cs.primary),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                onPressed: () {
+                                  setState(() => _obscurePassword = !_obscurePassword);
+                                },
+                              ),
+                              errorText: null,
+                            ),
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            onChanged: (_) => _clearErrors(),
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                          if (_passwordError != null) ...[
+                            const SizedBox(height: 8),
+                            _ErrorText(text: _passwordError!),
+                          ],
+                        ],
+                      ),
                     ],
-                  ],
+                  ),
                 ),
                 const SizedBox(height: 16),
 
                 // Запомнить меня + Забыли пароль
                 Row(
                   children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (value) {
-                        setState(() => _rememberMe = value ?? false);
-                      },
+                    Transform.scale(
+                      scale: 0.9,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() => _rememberMe = value ?? false);
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
                     ),
                     Text(
                       'Запомнить меня',
@@ -296,13 +372,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Функция восстановления пароля скоро будет доступна')),
+                          SnackBar(
+                            content: const Text('Функция восстановления пароля скоро будет доступна'),
+                            backgroundColor: cs.primary,
+                          ),
                         );
                       },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
                       child: Text(
                         'Забыли пароль?',
-                        style: t.textTheme.bodyMedium?.copyWith(
+                        style: t.textTheme.bodySmall?.copyWith(
                           color: cs.primary,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -310,31 +393,54 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Кнопка входа
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _loading ? null : _submit,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                // Кнопка входа с градиентом
+                Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [cs.primary, cs.primary.withOpacity(0.8)],
                     ),
-                    child: _loading
-                        ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text(
-                      'Войти',
-                      style: TextStyle(fontSize: 16),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cs.primary.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _loading ? null : _submit,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Center(
+                        child: _loading
+                            ? SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: cs.onPrimary,
+                                ),
+                              )
+                            : Text(
+                                'Войти',
+                                style: t.textTheme.titleMedium?.copyWith(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
 
                 // Разделитель
                 Row(
                   children: [
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider(color: cs.outline.withOpacity(0.3))),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
@@ -344,7 +450,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const Expanded(child: Divider()),
+                    Expanded(child: Divider(color: cs.outline.withOpacity(0.3))),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -365,7 +471,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           MaterialPageRoute(builder: (_) => const RegisterBuyerScreen()),
                         );
                       },
-                      child: const Text('Зарегистрируйтесь'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(0, 0),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Зарегистрируйтесь',
+                        style: t.textTheme.bodyMedium?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),

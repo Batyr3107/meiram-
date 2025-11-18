@@ -96,68 +96,85 @@ class _HeroSection extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          // Icon
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.primary.withOpacity(0.7),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Адаптивная верстка для разных размеров экранов
+          final isSmallScreen = constraints.maxWidth < 400;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon
+                  Container(
+                    width: isSmallScreen ? 70 : 100,
+                    height: isSmallScreen ? 70 : 100,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primary,
+                          colorScheme.primary.withOpacity(0.7),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.shopping_basket_rounded,
+                      size: isSmallScreen ? 36 : 48,
+                      color: colorScheme.onPrimary,
+                    ),
+                  ),
+                  SizedBox(width: isSmallScreen ? 16 : 24),
+                  // Text Content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Рынок свежих\nпродуктов',
+                          style: textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: colorScheme.onSurface,
+                            height: 1.2,
+                            fontSize: isSmallScreen ? 20 : null,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Прямо со складов — на ваш стол. Свежесть, контроль качества и честные цены каждый день.',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.4,
+                            fontSize: isSmallScreen ? 13 : null,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.shopping_basket_rounded,
-              size: 48,
-              color: colorScheme.onPrimary,
-            ),
-          ),
-          const SizedBox(width: 24),
-          // Text Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Рынок свежих\nпродуктов',
-                  style: textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.onSurface,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Прямо со складов — на ваш стол. Свежесть, контроль качества и честные цены каждый день.',
-                  style: textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: true,
-                ),
-                const SizedBox(height: 16),
-                // Stats Row
-                _buildStatsRow(),
-              ],
-            ),
-          ),
-        ],
+              const SizedBox(height: 16),
+              // Stats Row
+              _buildStatsRow(),
+            ],
+          );
+        },
       ),
     );
   }
